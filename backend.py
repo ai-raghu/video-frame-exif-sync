@@ -9,15 +9,30 @@ CORS(app)  # Enable CORS for frontend access
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# Function to extract a frame from a video
 def extract_frame(video_path):
     output_frame = os.path.join(app.config['UPLOAD_FOLDER'], "extracted_frame.jpg")
-    command = ["ffmpeg", "-i", video_path, "-vf", "select=eq(n\\,10)", "-vsync", "vfr", output_frame]
+    command = ["ffmpeg", "-i", video_path, "-vf", "select=eq(n\\,10)", "-vsync", "vfr", "-frames:v", "1", "-q:v", "2", output_frame]
     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    if os.path.exists(output_frame):
+        print(f"✅ Frame extracted: {output_frame}")
+    else:
+        print("❌ Error: Frame extraction failed.")
+    
     return output_frame if os.path.exists(output_frame) else None
 
+# Function to sync EXIF metadata
 def sync_exif(reference_photo, target_photo):
-    command = ["exiftool", "-TagsFromFile", reference_photo, "-all:all", target_photo]
+    command = ["exiftool", "-TagsFromFile", reference_photo, "-all:all", "-overwrite_original", target_photo]
     subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    
+    # Log the embedded metadata
+    metadata_command = ["exiftool", target_photo]
+    metadata_output = subprocess.run(metadata_command, capture_output=True, text=True).stdout
+    print("🔍 Embedded Metadata:")
+    print(metadata_output)
+    
     return target_photo
 
 @app.route('/upload', methods=['POST'])
@@ -43,7 +58,7 @@ def upload():
 
 @app.route('/')
 def home():
-    return "API is running. Use the frontend to upload files."
+    return "✅ API is running. Use the frontend to upload files."
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
