@@ -13,12 +13,15 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 def extract_frame(video_path):
     output_frame = os.path.join(app.config['UPLOAD_FOLDER'], "extracted_frame.jpg")
 
-    # Check if ffmpeg is installed
+    # Check if FFmpeg is installed
     ffmpeg_check = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True)
     print("FFmpeg Check:", ffmpeg_check.stdout)
 
-    # FFmpeg command to extract frame
-    command = ["ffmpeg", "-i", video_path, "-vf", "select=eq(n\\,10)", "-vsync", "vfr", "-frames:v", "1", "-q:v", "2", output_frame]
+    # Adjusting FFmpeg command to support HEVC (H.265)
+    command = [
+        "ffmpeg", "-i", video_path, "-vf", "yadif,select=eq(n\\,10)", "-vsync", "vfr",
+        "-frames:v", "1", "-pix_fmt", "yuvj420p", "-q:v", "2", output_frame
+    ]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     print("FFmpeg Output:", result.stdout)
