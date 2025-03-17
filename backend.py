@@ -17,10 +17,12 @@ def extract_frame(video_path):
     ffmpeg_check = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True)
     print("FFmpeg Check:", ffmpeg_check.stdout)
 
-    # Adjusting FFmpeg command to support HEVC (H.265)
+    # New FFmpeg command to handle HEVC & 10-bit video correctly
     command = [
-        "ffmpeg", "-i", video_path, "-vf", "yadif,select=eq(n\\,10)", "-vsync", "vfr",
-        "-frames:v", "1", "-pix_fmt", "yuvj420p", "-q:v", "2", output_frame
+        "ffmpeg", "-y", "-i", video_path, 
+        "-vf", "scale=1920:1080:flags=lanczos,format=yuv420p", 
+        "-c:v", "mjpeg", "-q:v", "2", 
+        "-frames:v", "1", output_frame
     ]
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
@@ -33,6 +35,7 @@ def extract_frame(video_path):
         print("❌ Error: Frame extraction failed.")
 
     return output_frame if os.path.exists(output_frame) else None
+
 
 # Function to sync EXIF metadata
 def sync_exif(reference_photo, target_photo):
