@@ -12,14 +12,23 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # Function to extract a frame from a video
 def extract_frame(video_path):
     output_frame = os.path.join(app.config['UPLOAD_FOLDER'], "extracted_frame.jpg")
+
+    # Check if ffmpeg is installed
+    ffmpeg_check = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True)
+    print("FFmpeg Check:", ffmpeg_check.stdout)
+
+    # FFmpeg command to extract frame
     command = ["ffmpeg", "-i", video_path, "-vf", "select=eq(n\\,10)", "-vsync", "vfr", "-frames:v", "1", "-q:v", "2", output_frame]
-    subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    print("FFmpeg Output:", result.stdout)
+    print("FFmpeg Error:", result.stderr)
+
     if os.path.exists(output_frame):
-        print(f"✅ Frame extracted: {output_frame}")
+        print(f"✅ Frame extracted successfully: {output_frame}")
     else:
         print("❌ Error: Frame extraction failed.")
-    
+
     return output_frame if os.path.exists(output_frame) else None
 
 # Function to sync EXIF metadata
