@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Frame EXIF Sync</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        input, button { margin: 10px; padding: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Upload Video and Photo to Sync EXIF</h2>
+    <input type="file" id="videoFile" accept="video/*">
+    <input type="file" id="photoFile" accept="image/jpeg,image/png">
+    <button onclick="uploadFiles()">Sync EXIF</button>
+    <p id="status"></p>
+    
+    <script>
+        function uploadFiles() {
+            let video = document.getElementById("videoFile").files[0];
+            let photo = document.getElementById("photoFile").files[0];
+            if (!video || !photo) {
+                alert("Please select both video and photo files.");
+                return;
+            }
+            
+            let formData = new FormData();
+            formData.append("video", video);
+            formData.append("photo", photo);
+            
+            document.getElementById("status").innerText = "Processing... Please wait";
+            
+            fetch("https://your-backend-url.com/upload", {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                let url = window.URL.createObjectURL(blob);
+                let a = document.createElement("a");
+                a.href = url;
+                a.download = "synced_frame.jpg";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                document.getElementById("status").innerText = "Download Complete!";
+            })
+            .catch(error => {
+                document.getElementById("status").innerText = "Error processing files";
+                console.error("Error:", error);
+            });
+        }
+    </script>
+</body>
+</html>
