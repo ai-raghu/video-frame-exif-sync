@@ -17,10 +17,12 @@ def extract_frame(video_path):
     ffmpeg_check = subprocess.run(["ffmpeg", "-version"], capture_output=True, text=True)
     print("FFmpeg Check:", ffmpeg_check.stdout)
 
-    # New FFmpeg command to handle HEVC & 10-bit video correctly
+    # FFmpeg command to handle HEVC, Dolby Vision, and high bit-depth
     command = [
         "ffmpeg", "-y", "-i", video_path, 
-        "-vf", "scale=1920:1080:flags=lanczos,format=yuv420p", 
+        "-map", "0:v:0",  # Select only the first video stream
+        "-vf", "scale=1920:1080:flags=lanczos,format=yuv420p",  # Convert to 8-bit standard format
+        "-pix_fmt", "yuvj420p",  # Set correct pixel format
         "-c:v", "mjpeg", "-q:v", "2", 
         "-frames:v", "1", output_frame
     ]
@@ -35,6 +37,7 @@ def extract_frame(video_path):
         print("❌ Error: Frame extraction failed.")
 
     return output_frame if os.path.exists(output_frame) else None
+
 
 
 # Function to sync EXIF metadata
